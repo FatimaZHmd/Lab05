@@ -24,58 +24,52 @@ import models.Note;
  */
 public class NoteServlet extends HttpServlet  {
 
-   
-
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String path = getServletContext().getRealPath("/WEB-INF/note.txt");
-    
-    
-    
-        // to read files
-    
-        BufferedReader br  = new BufferedReader(new FileReader(new File(path)));
-    
-         // to write to a file
-         PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(path, false))); 
-
-    }
-
+   private final String notePath="/WEB-INF/note.txt";
    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+     String path = getServletContext().getRealPath(notePath);
+     // to read files
+     BufferedReader br  = new BufferedReader(new FileReader(new File(path)));
+        String title = br.readLine();
+        String contents = br.readLine();
+        br.close();
         
-    getServletContext().getRequestDispatcher("/WEB-INF/viewnote.jsp").forward(request, response);
-   
-        return; }
+        Note note= new Note(title,contents);
+        request.setAttribute("note", note);
+        
+        String param= request.getParameter("edit");
+        if(param == null){
+            getServletContext().getRequestDispatcher("/WEB-INF/viewnote.jsp").forward(request, response);
+        } else{
+            getServletContext().getRequestDispatcher("/WEB-INF/editnote.jsp").forward(request, response);   
+        }
+         return;
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
       
-        String title = request.getParameter("title");
-        String contents= request.getParameter("contents");
+        String title = "";
+        String contents= "";
+        String path = getServletContext().getRealPath(notePath);
+        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(path, false)));
+        
+        title=request.getParameter("title");
+        contents= request.getParameter("contents");
+        String text = String.format("%s%n%s", title, contents);
+        pw.print(text);
+        pw.close();
+        
         
         Note note = new Note(title,contents);
-        
         request.setAttribute("note", note);
         
+        getServletContext().getRequestDispatcher("/WEB-INF/viewnote.jsp").forward(request, response);
+        return;
     }
    
-
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
 
 }
